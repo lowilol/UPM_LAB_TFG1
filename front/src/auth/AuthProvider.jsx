@@ -8,7 +8,6 @@ const AuthContext = createContext({
   isAuthenticated: false,
   getAccessToken: () =>({}),
   ObtainAccessToken: () => {},
-  setAccessToken: (_accessToken) => {},
   saveUser: (_userData) => {},
   getUser: () => ({}),
   signout: () => {},
@@ -16,7 +15,6 @@ const AuthContext = createContext({
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState();
-  const [accessToken, setAccessToken] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isloading, setIsLoading] = useState(true);
   const navigate = useNavigate();
@@ -54,11 +52,11 @@ export function AuthProvider({ children }) {
 
   async function checkAuth() {
     try {
-     // setIsLoading(true); 
+     //setIsLoading(true); 
       const token = getAccessToken()
       if (token) {
         
-        const response = await fetch("http://localhost:5000/api/verifyToken", {
+        const response = await fetch("http://localhost:4000/api/verifyToken", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -67,6 +65,7 @@ export function AuthProvider({ children }) {
           },
           credentials: 'include'
         });
+        
 
         if (response.ok) {
           const userData =await response.json();

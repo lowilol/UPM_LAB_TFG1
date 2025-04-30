@@ -396,14 +396,14 @@ router.get("/exportar-alumnos/:id_turno", async (req, res) => {
 
 
     worksheet.getRow(1).eachCell((cell) => {
-      cell.font = { bold: true, color: { argb: "FFFFFFFF" }, size: 12 };  // Negrita, texto blanco
-      cell.fill = {                                                      // Fondo azul
+      cell.font = { bold: true, color: { argb: "FFFFFFFF" }, size: 12 };  
+      cell.fill = {                                                     
         type: "pattern",
         pattern: "solid",
         fgColor: { argb: "007BFF" }
       };
-      cell.alignment = { vertical: "middle", horizontal: "center" };      // Alineación
-      cell.border = {                                                    // Bordes
+      cell.alignment = { vertical: "middle", horizontal: "center" };      
+      cell.border = {                                                    
         top: { style: "thin" },
         left: { style: "thin" },
         bottom: { style: "thin" },
@@ -449,8 +449,7 @@ router.get("/exportar-alumnos/:id_turno", async (req, res) => {
           bottom: { style: "thin" },
           right: { style: "thin" }
         };
-        cell.alignment = { vertical: "middle", horizontal: "left" };  // Alineación izquierda
-      });
+        cell.alignment = { vertical: "middle", horizontal: "left" };  
     });
 
 
@@ -483,6 +482,7 @@ router.get("/exportar-alumnos/:id_turno", async (req, res) => {
 module.exports = router;
 
   
+
 
 
 

@@ -1,7 +1,7 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/connection');
 const Laboratorio = require('./Laboratorio');
-const Turno = require('./Turno');
+
 const Incidencia_lab= sequelize.define('LaboratorioIncidencia', {
     
     id_incidencia: {

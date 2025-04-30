@@ -29,18 +29,18 @@ const Rol_ = (dominio) =>{
 }
  
 const extraerDominioCorreo = async(correo)=> {
-  // Dividir el correo en dos partes: el nombre y el dominio
+ 
   const partesCorreo = correo.split('@');
   
-  // Si el correo está mal formado y no tiene '@', retornamos null
+  
   if (partesCorreo.length !== 2) {
-    return null; // Maneja casos de correos inválidos
+    return null; 
   }
   
-  // Obtener la parte del dominio
+  
   const dominio = '@' + partesCorreo[1];
 
-  // Retornar el dominio completo
+  
   return dominio;
 }
 

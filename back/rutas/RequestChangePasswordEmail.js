@@ -39,7 +39,7 @@ router.post('/', async (req, res) => {
   console.log(resetToken)
 
   
-  const resetLink = `http://localhost:5000/changerPassword/${resetToken}`;
+  const resetLink = `http://localhost:3000/changerpassword/${resetToken}`;
   
   emailTemplate = emailTemplate.replace('${resetLink}', resetLink);
    
@@ -51,7 +51,7 @@ router.post('/', async (req, res) => {
     subject: 'Reset your password',
     html:emailTemplate,
   }
-  transporter.sendMail(mailOptions);
+ transporter.sendMail(mailOptions);
     res.status(200).json(jsonResponse(200, {
       request: " correo enviado ",
     }));

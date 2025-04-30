@@ -52,12 +52,19 @@ router.post('/:id_turno/:id_alumno', async (req, res) => {
     }
 });
 
-router.put("/cancelar/:id_reserva", async (req, res) => {
-    const { id_reserva } = req.params;
-  
+router.put("/cancelar/:id_turno/:id_alumno", async (req, res) => {
+  const { id_alumno,id_turno } = req.params;
+  console.log("alumnoooo: " + id_alumno +" " + id_turno)
     try {
       
-      const reserva = await Reserva.findByPk(id_reserva);
+      const reserva = await Reserva.findOne({
+        where: {
+           id_turno,
+           id_alumno
+        }
+      });
+
+      console.log(reserva)
       if (!reserva) {
         return res.status(404).json({ error: "Reserva no encontrada" });
       }
@@ -71,7 +78,7 @@ router.put("/cancelar/:id_reserva", async (req, res) => {
             })
           );
       }
-      const turno = await Turno.findByPk(reserva.id_turno);
+      const turno = await Turno.findByPk(id_turno);
       if (!turno) {
         return res.status(404).json({ error: "Turno asociado no encontrado" });
       }

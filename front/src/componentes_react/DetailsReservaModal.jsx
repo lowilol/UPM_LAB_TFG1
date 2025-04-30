@@ -19,7 +19,7 @@ const DetailsReservaModal = ({ reserva, onClose, onCancelReserva,errorMensage,su
   const handleCancelReserva = () => {
     if (window.confirm("¿Estás seguro de que deseas cancelar esta reserva?")) {
       setIsCancelling(true);
-      onCancelReserva(reserva.id_reserva);
+      onCancelReserva( reserva.id_turno,reserva.id_alumno);
       setIsCancelling(false);
     }
   };

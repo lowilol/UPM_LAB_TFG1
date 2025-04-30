@@ -10,8 +10,9 @@ router.post("/", verifyAccessToken,async function (req, res, next) {
   const token = req.headers['authorization']?.split(' ')[1]; 
   const email = req.body.email
 
- 
- 
+ console.log(email)
+  console.log("Token recibido:", token);
+  console.log("Email recibido:", email);
   const userEmailExists = await emailExists(email);
 
     if (!userEmailExists ) {

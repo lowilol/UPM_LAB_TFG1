@@ -48,7 +48,7 @@ export default function signup() {
     console.log(name, lastname , email , password);
 
     try {
-      const response = await fetch("http://localhost:5000/api/signup", {
+      const response = await fetch("http://localhost:4000/api/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({  name, lastname, email , password }),
@@ -72,7 +72,7 @@ export default function signup() {
   async function handleVerificationSubmit(e){
     e.preventDefault();
     try {
-      const response = await fetch("http://localhost:5000/api/verifyCode", {
+      const response = await fetch("http://localhost:4000/api/verifyCode", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({  name, lastname , email , password, verificationCode }),

@@ -1,13 +1,28 @@
 import '../styles/profile.css'; 
 
-import { useState} from "react";
+import { useState,useEffect } from "react";
 
 const Perfil = ({ usuario, onUpdate }) => {
+ 
+   console.log(usuario)
+ 
+
+ 
+
+
+
+
     console.log(usuario)
-    const [matricula, setMatricula] = useState(usuario.specificData || "");
-    const [departamento, setDepartamento] = useState(usuario.specificData  || "");
+    const initialData = usuario.specificData ? usuario.specificData.toString() : "";
+    const [matricula, setMatricula] = useState(initialData);
+    const [departamento, setDepartamento] = useState(initialData);
     const id_user = usuario.dataValues.id_user
     const rol = usuario.dataValues.rol
+
+    console.log(id_user);
+    console.log(departamento);
+    console.log(matricula);
+
     const handleUpdate = () => {
       onUpdate({ id_user , rol,matricula, departamento });
     };
@@ -27,39 +42,33 @@ const Perfil = ({ usuario, onUpdate }) => {
         </div>
   
         {rol === "Alumno" && (
-          <div>
+            <div>
             <label>Matrícula:</label>
-            {matricula ? (
-              <p>{matricula}</p> 
-            ) : (
-              <input
+            <input
+                type="text"
                 value={matricula}
                 onChange={(e) => setMatricula(e.target.value)}
                 placeholder="Ingresa tu matrícula"
-              />
-            )}
-          </div>
+            />
+        </div>
         )}
   
         {rol === "Profesor" && (
-          <div>
-            <label>Departamento:</label>
-            {departamento ? (
-              <p>{departamento}</p> 
-            ) : (
-              <input
-                value={departamento}
-                onChange={(e) => setDepartamento(e.target.value)}
-                placeholder="Ingresa tu departamento"
-              />
-            )}
-          </div>
+           <div>
+           <label>Departamento:</label>
+           <input
+               type="text"
+               value={departamento}
+               onChange={(e) => setDepartamento(e.target.value)}
+               placeholder="Ingresa tu departamento"
+           />
+       </div>
         )}
   
         
-        {(!matricula && rol === "Alumno") || (!departamento && rol === "Profesor") ? (
+       
           <button onClick={handleUpdate}>Actualizar Perfil</button>
-        ) : null}
+       
       </div>
     );
   };

@@ -13,7 +13,7 @@ const Profesor = sequelize.define('Profesor', {
     },
     departamento: {
         type: DataTypes.STRING,
-        allowNull: false
+        allowNull:  true
     }
 }, {
     tableName: 'profesor',

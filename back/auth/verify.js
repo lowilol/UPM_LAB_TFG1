@@ -10,11 +10,13 @@ const redis = require("../config/redis");
 
 async function verifyAccessToken(req, res, next) {
   try {
-    if (!req || !req.cookies) {
+   
+  
+    if (!req ) {
       return res.status(400).json({ error: "Solicitud malformada" });
     }
 
-    const token = req.cookies.access_token; 
+    const token =  req.headers['authorization']?.split(' ')[1];
     console.log("Verificando token:", token);
 
     if (!token) {

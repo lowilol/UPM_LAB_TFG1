@@ -28,7 +28,7 @@ export default function Dashboard(  ) {
    const [rol, setRol] = useState("");
    const [id_user,setId_user] = useState("");
    const [error, setError] = useState("");
-   const { isAuthenticated, logout,checkAuth } = useAuth();
+   const { isAuthenticated, logout,checkAuth, getAccessToken} = useAuth();
    
 
    const[success,setSuccess ] = useState("");
@@ -77,7 +77,7 @@ export default function Dashboard(  ) {
       console.log("escaneando...")
     
       const userDataRaw = sessionStorage.getItem('user');
-      const accessToken = sessionStorage.getItem('accessToken');
+      const accessToken = getAccessToken()
       
       if (userDataRaw) {
          try {
@@ -104,7 +104,7 @@ export default function Dashboard(  ) {
    }, [isAuthenticated, navigate]);
    const fetchMisTurnos = async (id_profesor) => {
       try {
-        const response = await fetch(`http://localhost:5000/api/turno/${id_profesor}`, {
+        const response = await fetch(`http://localhost:4000/api/turno/${id_profesor}`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -128,9 +128,10 @@ export default function Dashboard(  ) {
 
 
 
-    const handleCancelReserva = async (id_reserva) => {
+    const handleCancelReserva = async (id_turno,id_usuario) => {
+      const id_alumno = id_usuario;
       try {
-        const response = await fetch(`http://localhost:5000/api/reserva/cancelar/${id_reserva}`, {
+        const response = await fetch(`http://localhost:4000/api/reserva/cancelar/${id_turno}/${id_alumno}`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
@@ -139,8 +140,10 @@ export default function Dashboard(  ) {
         });
         const updatedReserva = await response.json();
         if (response.ok) {
-          setReservas((prevReservas) =>
-            prevReservas.map((r) => (r.id_reserva === id_reserva ? { ...r, estado: "Cancelada" } : r))
+         setReservas((prevReservas) =>
+            prevReservas.map((r) =>
+              r.id_turno === id_turno && r.id_alumno === id_alumno ? { ...r, estado: "Cancelada" } : r
+            )
           );
 
           
@@ -151,9 +154,9 @@ export default function Dashboard(  ) {
           console.log(success)
         } else {
           console.error("Error al cancelar la reserva");
-          setErrorMensageReserva(updatedReserva.body.error)
+          setErrorMensageReserva(updatedReserva.error)
           console.log(ErrorMensageReserva)
-          console.log(updatedReserva.body.error)
+          console.log(updatedReserva.error)
         }
       } catch (error) {
         console.error("Error al cancelar la reserva:", error);
@@ -167,7 +170,7 @@ export default function Dashboard(  ) {
    const fetchTurnosDisponibles = async () => {
     try {
       console.log("Iniciando solicitud para obtener turnos disponibles"); 
-       const response = await fetch('http://localhost:5000/api/turno', {
+       const response = await fetch('http://localhost:4000/api/turno', {
           method: 'GET',
           headers: {
              'Content-Type': 'application/json',
@@ -192,7 +195,7 @@ export default function Dashboard(  ) {
 
    const id_alumno = id_usuario 
    try {
-      const response = await fetch(`http://localhost:5000/api/reserva/${id_alumno}`, {
+      const response = await fetch(`http://localhost:4000/api/reserva/${id_alumno}`, {
          method: 'GET',
          headers: {
             'Content-Type': 'application/json',
@@ -226,7 +229,7 @@ export default function Dashboard(  ) {
 const fetchReservaTurno = async (id_usuario, id_turno) => {
    const id_alumno = id_usuario;
    try {
-      const response = await fetch(`http://localhost:5000/api/reserva/${id_turno}/${id_alumno}`, {
+      const response = await fetch(`http://localhost:4000/api/reserva/${id_turno}/${id_alumno}`, {
          method: 'POST',
          headers: {
             'Content-Type': 'application/json',
@@ -264,7 +267,7 @@ const fetchReservaTurno = async (id_usuario, id_turno) => {
 
 const handleCreateIncidenciaLab = async (id_laboratorio, incidencia , descripcion_incidencia ,id_user) => {
    try {
-     const response = await fetch("http://localhost:5000/api/incidencia/laboratorio", {
+     const response = await fetch("http://localhost:4000/api/incidencia/laboratorio", {
        method: "POST",
        headers: { "Content-Type": "application/json" },
        body: JSON.stringify({ id_laboratorio, incidencia,id_user,descripcion_incidencia }),
@@ -286,7 +289,7 @@ const handleCreateIncidenciaLab = async (id_laboratorio, incidencia , descripcio
 
  const handleCreateIncidenciaTurno = async (id_turno, incidencia, descripcion_incidencia) => {
    try {
-     const response = await fetch("http://localhost:5000/api/incidencia/turno", {
+     const response = await fetch("http://localhost:4000/api/incidencia/turno", {
        method: "POST",
        headers: { "Content-Type": "application/json" },
        body: JSON.stringify({ id_turno, incidencia,descripcion_incidencia}),
@@ -329,7 +332,7 @@ const handleOptionClickShowReserva = (option) => {
          console.error("El ID del profesor no está disponible.");
          return;
       }
-      const response = await fetch(`http://localhost:5000/api/turno/${id_profesor}/${id_turno}`, {
+      const response = await fetch(`http://localhost:4000/api/turno/${id_profesor}/${id_turno}`, {
          method: "DELETE",
          headers: {
             "Content-Type": "application/json",
@@ -360,7 +363,7 @@ const handleUpdateTurno = async (id_turno, newFecha, newHoraInicio , newHoraFin)
          console.error("El ID del profesor no está disponible.");
          return;
       }
-      const response = await fetch(`http://localhost:5000/api/turno/${id_profesor}/${id_turno}`, {
+      const response = await fetch(`http://localhost:4000/api/turno/${id_profesor}/${id_turno}`, {
          method: "PUT",
          headers: {
             "Content-Type": "application/json",
@@ -410,7 +413,7 @@ const handleUpdateTurno = async (id_turno, newFecha, newHoraInicio , newHoraFin)
 
 const fetchMostrarLab = async () => {
    try {
-      const response = await fetch('http://localhost:5000/api/laboratorio', {
+      const response = await fetch('http://localhost:4000/api/laboratorio', {
          method: 'GET',
          headers: {
             'Content-Type': 'application/json',
@@ -438,7 +441,7 @@ const fetchMostrarLab = async () => {
 const handleDeleteLaboratorio = async (id_laboratorio) => {
    try {
       
-      const response = await fetch(`http://localhost:5000/api/laboratorio/${id_laboratorio}X${id_user}`, {
+      const response = await fetch(`http://localhost:4000/api/laboratorio/${id_laboratorio}X${id_user}`, {
          method: "DELETE",
          headers: {
             "Content-Type": "application/json",
@@ -461,7 +464,7 @@ const handleDeleteLaboratorio = async (id_laboratorio) => {
 
 const handleUpdateLaboratorio = async (id_laboratorio, nuevaCapacidad) => {
    try {
-      const response = await fetch(`http://localhost:5000/api/laboratorio/${id_laboratorio}`, {
+      const response = await fetch(`http://localhost:4000/api/laboratorio/${id_laboratorio}`, {
          method: "PUT",
          headers: {
             "Content-Type": "application/json",
@@ -543,7 +546,7 @@ const handleUpdateLaboratorio = async (id_laboratorio, nuevaCapacidad) => {
 
    const fetchDashboardMessage = async (accessToken,email) => {
       try {
-         const response = await fetch('http://localhost:5000/api/dashboard', {
+         const response = await fetch('http://localhost:4000/api/dashboard', {
             method: 'POST',
             headers: {
                'Content-Type': 'application/json',
@@ -639,7 +642,7 @@ const closeModalRoeLab= () => {
  const fletchIncidenislaboratorio =  async (laboratorio) => {
    
       try {
-          const response = await fetch(`http://localhost:5000/api/incidencia/laboratorio/${laboratorio.id_laboratorio}`, {
+          const response = await fetch(`http://localhost:4000/api/incidencia/laboratorio/${laboratorio.id_laboratorio}`, {
             method: 'GET',
             headers: {
                'Content-Type': 'application/json',
@@ -658,9 +661,9 @@ const closeModalRoeLab= () => {
    };
    const handleUpdateProfile = async (id_user, rol, matricula, departamento) => {
       try {
-         const accessToken = sessionStorage.getItem("accessToken");
-   
-         const response = await fetch("http://localhost:5000/api/user/updateProfile", {
+         const accessToken = getAccessToken();
+   console.log(accessToken)
+         const response = await fetch("http://localhost:4000/api/user/updateProfile", {
             method: "PUT",
             headers: {
                "Content-Type": "application/json",
@@ -688,7 +691,7 @@ const closeModalRoeLab= () => {
    const fletchIncidenislaboratorioAll =  async () => {
    
       try {
-          const response = await fetch(`http://localhost:5000/api/incidencia/laboratorio`, {
+          const response = await fetch(`http://localhost:4000/api/incidencia/laboratorio`, {
             method: 'GET',
             headers: {
                'Content-Type': 'application/json',

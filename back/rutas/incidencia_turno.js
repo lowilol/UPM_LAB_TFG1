@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
-
-
+// F-03: Proteger todas las rutas de incidencias de turno
+const authenticateToken = require('../auth/authenticateToken');
 
 const  IncidenciaTurno  = require('../models/Incidencia_turno');
 const   Turno  = require('../models/Turno');
@@ -14,26 +14,28 @@ const  Profesor  = require('../models/Profesor');
 const fs = require('fs');
 const path = require('path');
 
-const transporter = require('../config/email'); 
+const transporter = require('../config/email');
 
 
 
 
 
 
-router.delete('/:id_incidencia', async (req, res) => {
+
+
+router.delete('/:id_incidencia', authenticateToken, async (req, res) => {
     const { id_incidencia} = req.params;
-  
+
     try {
       const incidencia = await IncidenciaTurno.findByPk(id_incidencia);
-      
-  
+
+
       if (!incidencia) {
         return res.status(404).json({ error: 'Laboratorio no encontrado' });
       }
-  
+
       await IncidenciaTurno.destroy({ where: { id_incidencia } });
-     
+
       res.status(200).json({ message: 'inicidencia eliminado exitosamente' });
     } catch (error) {
       console.error('Error al eliminar el laboratorio:', error);
@@ -46,15 +48,15 @@ router.delete('/:id_incidencia', async (req, res) => {
 
 
 
-router.get('/:id', async (req, res) => {
+router.get('/:id', authenticateToken, async (req, res) => {
     const {id} = req.params;
     console.log("estoy en el get de turno "+ JSON.stringify(id, null, 2))
-    
+
     try {
         const incidencias = await IncidenciaTurno.findAll({
             where: { id_turno: id },
-            attributes: ['id_incidencia','incidencia', 'fecha_asociacion','descripcion_incidencia'], 
-           
+            attributes: ['id_incidencia','incidencia', 'fecha_asociacion','descripcion_incidencia'],
+
         });
         console.log("incidencias turno: "+JSON.stringify(incidencias, null, 2));
         res.status(200).json(incidencias);
@@ -76,14 +78,14 @@ router.get('/:id', async (req, res) => {
 
 
 
-router.post('/', async (req, res) => {
+router.post('/', authenticateToken, async (req, res) => {
     const { id_turno, incidencia , descripcion_incidencia} = req.body;
     const emailTemplatePath = path.join(__dirname, '../templates/email_incidencia_turno.html');
     let emailTemplate = fs.readFileSync(emailTemplatePath, { encoding: 'utf-8' });
 
     try {
-        
-        
+
+
 
 
         const turno  = await Turno.findOne({
@@ -96,11 +98,11 @@ router.post('/', async (req, res) => {
                         {
                             model: Usuario,
                             as: 'usuario',
-                            attributes: ['FirstName', 'LastName', 'email'], 
+                            attributes: ['FirstName', 'LastName', 'email'],
                         },
                     ],
                 },
-                
+
             ],
         });
         if (!turno) {
@@ -116,7 +118,7 @@ router.post('/', async (req, res) => {
             descripcion_incidencia
         });
 
-        
+
         const reservas = await Reserva.findAll({
             where: { id_turno },
             include: [
@@ -131,17 +133,17 @@ router.post('/', async (req, res) => {
                         },
                     ],
                 },
-                
+
             ],
         });
-        
+
         const emailProfesor = turno?.profesor?.usuario?.email
         const NombreProfesor = `${turno?.profesor?.usuario?.FirstName} ${turno?.profesor?.usuario?.LastName}`;
         console.log(JSON.stringify(reservas, null, 2));
 
         console.log(emailProfesor);
         for (const reserva of reservas) {
-            
+
             const emailAlumno = reserva?.alumno?.usuario?.email;
             const NombreAlumno = `${reserva?.alumno?.usuario?.FirstName} ${reserva?.alumno?.usuario?.LastName}`;
             const asunto = 'Incidencia de turno';

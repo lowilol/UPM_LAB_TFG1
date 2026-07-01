@@ -1,32 +1,24 @@
-const log = require("../lib/trace");
-const validateToken = require("./validateToken");
-const { verifyAccessToken } = require("./verify");
+const jwt = require("jsonwebtoken");
+require("dotenv").config();
 
 function authenticateToken(req, res, next) {
-  let token ;
-  log.info("headers", req.headers);
-  try {
-    token = validateToken(req.headers);
-       log.info("Token", token);
-  } catch (error) {
-    console.log("Error", error.message);
-    log.error(error.message);
-    if (error.message === "Token not provided") {
-      return res.status(401).json({ error: "Token no proporcionado" });
-    }
-    if (error.message === "Token format invalid") {
-      return res.status(401).json({ error: "Token mal formado" });
-    }
+  // Leer token de cookie HttpOnly (preferido) o header Authorization (fallback)
+  const token = req.cookies?.access_token ||
+    (req.headers["authorization"]?.startsWith("Bearer ")
+      ? req.headers["authorization"].split(" ")[1]
+      : null);
+
+  if (!token) {
+    return res.status(401).json({ error: "Token no proporcionado" });
   }
 
-  try {
-    const decoded = verifyAccessToken(token);
-    req.user = { ...decoded.user };
+  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+    if (err) {
+      console.log("Token inválido:", err.message);
+      return res.status(403).json({ error: "Token inválido o expirado" });
+    }
+    req.user = decoded.user ?? decoded;
     next();
-  } catch (err) {
-    console.log("6 Token inválido", token, err);
-    return res.status(403).json({ error: "Token inválido" });
-  }
+  });
 }
-
 module.exports = authenticateToken;

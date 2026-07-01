@@ -1,50 +1,39 @@
 const express = require("express");
 const router = express.Router();
-const { verifyAccessToken  } = require("../auth/verify");
-const  Profesor  = require('../models/Profesor');
-const  Alumno  = require('../models/Alumno');
+const authenticateToken = require('../auth/authenticateToken');
+const Profesor = require('../models/Profesor');
+const Alumno = require('../models/Alumno');
+const { emailExists, getUserByEmail } = require("../schema/user");
 
-const { emailExists, getUserByEmail} = require("../schema/user");
-router.post("/", verifyAccessToken,async function (req, res, next) {
-    
-  const token = req.headers['authorization']?.split(' ')[1]; 
-  const email = req.body.email
+router.post("/", authenticateToken, async function (req, res, next) {
+  const email = req.body.email;
 
- console.log(email)
-  console.log("Token recibido:", token);
   console.log("Email recibido:", email);
-  const userEmailExists = await emailExists(email);
 
-    if (!userEmailExists ) {
-      return res.status(401).json(jsonResponse(401, { error: "El email no existe" }));
-    }
+  const userEmailExists = await emailExists(email);
+  if (!userEmailExists) {
+    return res.status(401).json({ error: "El email no existe" });
+  }
 
   const user = await getUserByEmail(email);
 
-  if (!token) {
-    return res.status(401).json({ error: 'No autorizado, falta token' });
-  }
-
-  
-      
   let missingData = null;
+  let SpecificDateUser = null;
   const alumno = await Alumno.findOne({ where: { id_alumno: user.id_user } });
   const profesor = await Profesor.findOne({ where: { id_profesor: user.id_user } });
-  let SpecificDateUser = null
+
   if (user.rol === "Alumno") {
     if (!alumno?.matricula) missingData = "matricula";
-    else{SpecificDateUser=alumno?.matricula}
-  } else if (user.rol === "Profesor") {   
+    else SpecificDateUser = alumno?.matricula;
+  } else if (user.rol === "Profesor") {
     if (!profesor?.departamento) missingData = "departamento";
-    else{SpecificDateUser=profesor?.matricula}
+    else SpecificDateUser = profesor?.departamento;
   }
 
+  const { id_user, email: userEmail, FirstName, LastName, rol } = user.get({ plain: true });
+  const safeUser = { id_user, email: userEmail, FirstName, LastName, rol, specificData: SpecificDateUser };
 
-  const {password:_ , ... publicUser} = user 
-
-  res.json({  missingData ,publicUser: { ...publicUser, specificData: SpecificDateUser } });
-      
-  
+  res.json({ missingData, user: safeUser });
 });
 
 module.exports = router;

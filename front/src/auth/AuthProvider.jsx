@@ -1,97 +1,85 @@
-
 import React, { useContext, createContext, useState, useEffect } from "react";
-import { useNavigate} from "react-router-dom";
-import "react-toastify/dist/ReactToastify.css";  
+import { useNavigate } from "react-router-dom";
+import "react-toastify/dist/ReactToastify.css";
 import { toast } from "react-toastify";
 import { ClipLoader } from "react-spinners";
+
 const AuthContext = createContext({
   isAuthenticated: false,
-  getAccessToken: () =>({}),
-  ObtainAccessToken: () => {},
+  getAccessToken: () => null,
   saveUser: (_userData) => {},
   getUser: () => ({}),
-  signout: () => {},
+  logout: () => {},
+  checkAuth: () => {},
 });
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState();
+  const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isloading, setIsLoading] = useState(true);
   const navigate = useNavigate();
+
+  // Cookie es HttpOnly -- JS no puede leerla; viaja automaticamente con credentials: "include"
   function getAccessToken() {
-    
-    const cookieString = document.cookie
-    .split("; ")
-    .find((row) => row.startsWith("access_token="));
-   
-  return cookieString ? cookieString.split("=")[1] : null;
+    return null;
   }
 
   function saveUser(userData) {
-    document.cookie = `user=${JSON.stringify(userData)}; path=/;`;
+    sessionStorage.setItem("user", JSON.stringify(userData));
     setUser(userData);
     setIsAuthenticated(true);
   }
-
- 
-   
-  
-  
 
   function getUser() {
     return user;
   }
 
-  function logout() {
-    document.cookie = "access_token=; path=/; max-age=0"; 
-    document.cookie = "user=; path=/; max-age=0"; 
+  async function logout() {
+    // Limpiar estado ANTES del fetch para evitar que el redirect de login
+    // o una ruta protegida rebote a /dashboard mientras isAuthenticated siga
+    // siendo true durante la petición de red.
+    sessionStorage.removeItem("user");
     setUser(null);
     setIsAuthenticated(false);
     navigate("/");
+    try {
+      await fetch("/api/logout", {
+        method: "DELETE",
+        credentials: "include",
+      });
+    } catch (_) {
+      // ignorar errores de red; el estado ya se limpió
+    }
   }
 
   async function checkAuth() {
     try {
-     //setIsLoading(true); 
-      const token = getAccessToken()
-      if (token) {
-        
-        const response = await fetch("http://localhost:4000/api/verifyToken", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-           
-            
-          },
-          credentials: 'include'
-        });
-        
+      const response = await fetch("/api/verifyToken", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+      });
 
-        if (response.ok) {
-          const userData =await response.json();
-          setUser(userData.user);
-          setIsAuthenticated(true);
-        } else {
-          toast.error("⚠️ Tu sesión ha expirado. Inicia sesión nuevamente."); 
-          setTimeout(() => logout(), 10000); 
-        }
+      if (response.ok) {
+        const data = await response.json();
+        saveUser(data.user);
       } else {
-        toast.error("⚠️ Tu sesión ha expirado. Inicia sesión nuevamente."); 
-        setTimeout(() => logout(), 10000); 
+        toast.error("Tu sesion ha expirado. Inicia sesion nuevamente.");
+        setTimeout(() => logout(), 10000);
       }
     } catch (error) {
-      console.error("Error en la autenticación:", error);
-      toast.error("⚠️ Tu sesión ha expirado. Inicia sesión nuevamente.");
-          setTimeout(() => logout(), 10000);
+      console.error("Error en la autenticacion:", error);
+      toast.error("Tu sesion ha expirado. Inicia sesion nuevamente.");
+      setTimeout(() => logout(), 10000);
     } finally {
       setIsLoading(false);
     }
   }
 
-  
   useEffect(() => {
     checkAuth();
   }, []);
+
   return (
     <AuthContext.Provider
       value={{
@@ -100,10 +88,10 @@ export function AuthProvider({ children }) {
         saveUser,
         getUser,
         logout,
-        checkAuth
+        checkAuth,
       }}
     >
-     {isloading ? (
+      {isloading ? (
         <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>
           <ClipLoader color="#3498db" size={50} />
         </div>
@@ -113,6 +101,5 @@ export function AuthProvider({ children }) {
     </AuthContext.Provider>
   );
 }
-
 
 export const useAuth = () => useContext(AuthContext);

@@ -1,14 +1,15 @@
 const express = require("express");
 const router = express.Router();
-const Token = require("../schema/token");
-const validateToken = require("../auth/validateToken");
 
-router.delete("/", async function (req, res, next) {
-  try {
-    
-  } catch (ex) {
-    return next(new Error("Error loging out the user " + ex.message));
-  }
+router.delete("/", function (req, res) {
+  // Borrar la cookie HttpOnly del token de sesión
+  res.clearCookie("access_token", {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: false,
+    path: "/",
+  });
+  return res.status(200).json({ message: "Sesión cerrada correctamente" });
 });
 
 module.exports = router;

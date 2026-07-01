@@ -7,6 +7,13 @@ export default defineConfig({
   server: {
     port: 3000, // Cambia el puerto a 3000 u otro disponible
     strictPort: true, // Evita que busque otro puerto automáticamente
+    proxy: {
+      // Reenvía todas las llamadas /api/... al backend Express
+      '/api': {
+        target: 'http://localhost:4000',
+        changeOrigin: true,
+      },
+    },
     hmr: {
       protocol: 'ws', // Asegúrate de que esté usando WebSocket
       host: 'localhost', // Asegúrate de que esté escuchando en localhost
@@ -14,4 +21,7 @@ export default defineConfig({
       // clientPort: 3000, // Asegúrate de que coincida con el puerto del servidor
     },
   },
+  preview: {
+    allowedHosts: ['upmlab.es', '.upmlab.es'],
+  }
 });

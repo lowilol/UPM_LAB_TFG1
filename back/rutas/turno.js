@@ -8,7 +8,8 @@ const  Reserva =require('../models/Reserva');
 const {isReservaMismoDia,calcularDiferenciaHoras,verificarConflictoHorario } = require ("../schema/turno")
 const  Alumno  = require('../models/Alumno');
 const { Op } = require("sequelize");
-
+// F-04 / F-19: Proteger todas las rutas con autenticación JWT
+const authenticateToken = require('../auth/authenticateToken');
 
 const fs = require('fs');
 const path = require('path');
@@ -17,7 +18,7 @@ const transporter = require('../config/email');
 const ExcelJS = require("exceljs");
 
 
-router.post('/', async (req, res) => {
+router.post('/', authenticateToken, async (req, res) => {
   const { id_laboratorio, fecha, hora_inicio, hora_fin,id_user} = req.body;
   console.log("Datos recibidos en el backend:", { id_laboratorio, id_user, fecha, hora_inicio, hora_fin });
   const id_profesor = id_user
@@ -73,7 +74,7 @@ router.post('/', async (req, res) => {
 });
 
 // obtener  todos los turnos cualquiera
-router.get("/", async (req, res) => {
+router.get("/", authenticateToken, async (req, res) => {
     try {
       const turnos = await Turno.findAll({
         include: [
@@ -102,7 +103,7 @@ router.get("/", async (req, res) => {
   });
 
 // obtener  todos los turnos del profesor
-  router.get("/:id_profesor", async (req, res) => {
+  router.get("/:id_profesor", authenticateToken, async (req, res) => {
     const { id_profesor } = req.params; 
   
     try {
@@ -142,7 +143,7 @@ router.get("/", async (req, res) => {
   
 
 // Borrar turno 
-  router.delete("/:id_profesor/:id_turno", async (req, res) => {
+  router.delete("/:id_profesor/:id_turno", authenticateToken, async (req, res) => {
     const { id_profesor, id_turno } = req.params; 
     const emailTemplatePath = path.join(__dirname, '../templates/email_incidenciaCancelar_turno.html');
     let emailTemplate = fs.readFileSync(emailTemplatePath, { encoding: 'utf-8' });
@@ -232,7 +233,7 @@ router.get("/", async (req, res) => {
   });
 
 // actualizar turno 
-router.put("/:id_profesor/:id_turno", async (req, res) => {
+router.put("/:id_profesor/:id_turno", authenticateToken, async (req, res) => {
   const { id_profesor, id_turno } = req.params;
   const { fecha, hora_inicio, hora_fin } = req.body;
 
@@ -356,8 +357,15 @@ router.put("/:id_profesor/:id_turno", async (req, res) => {
 
 
 
-router.get("/exportar-alumnos/:id_turno", async (req, res) => {
+// F-19: Requiere autenticación y rol Profesor o PAS para evitar IDOR
+router.get("/exportar-alumnos/:id_turno", authenticateToken, async (req, res) => {
   const { id_turno } = req.params;
+
+  // RBAC: solo Profesor y PAS pueden exportar listas de alumnos
+  const rolesPermitidos = ['Profesor', 'PAS', 'Admin'];
+  if (!req.user || !rolesPermitidos.includes(req.user.rol)) {
+    return res.status(403).json({ error: 'Acceso denegado. Se requiere rol Profesor o PAS.' });
+  }
 
   try {
     const reservas = await Reserva.findAll({
@@ -460,7 +468,7 @@ router.get("/exportar-alumnos/:id_turno", async (req, res) => {
     worksheet.eachRow({ includeEmpty: true }, function (row) {
       row.height = 20;
     });
-
+  });
 
 
 
